@@ -28,21 +28,25 @@ bool ConnectLocal(CSocket& socket, int port) {
 }
 
 bool Listen(CSocket& socket, int port) {
-  
+
   if (!socket.Socket()) {
+    tcout() << "socket.Socket() failed for port " << port << endl;
     return false;
   }
 
   if (!socket.Bind((uint16_t) port)) {
+    tcout() << "socket.Bind() failed for port " << port << endl;
     return false;
   }
 
   if (!socket.Listen()) {
+    tcout() << "socket.Listen() failed for port " << port << endl;
     return false;
   }
 
   CSocket sock;
   if (!socket.Accept(sock)) {
+    tcout() << "socket.Accept() failed for port " << port << endl;
     return false;
   }
 

@@ -9,7 +9,7 @@ import sys
 N_HIDDEN = 1
 LOSS = 'hinge'
 
-def report_scores(X, y, W, b, act):
+def report_scores(X, y, W, b, act, data_dir, data_type):
     y_true = []
     y_pred = []
     y_score = []
@@ -70,6 +70,14 @@ def report_scores(X, y, W, b, act):
         print('Avg. precision: {0:.2f}'.format(
             metrics.average_precision_score(y_true, y_score))
         )
+        # Plot ROC curve and save to file
+        fpr, tpr, _ = metrics.roc_curve(y_true, y_score)
+        plt.plot(fpr, tpr)
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title(f'ROC Curve ({data_type.capitalize()})')
+        plt.savefig(f'{data_dir}/roc_{data_type}.png')
+        plt.show()
     except Exception as e:
         sys.stderr.write(str(e))
         sys.stderr.write('\n')
@@ -103,7 +111,7 @@ if __name__ == '__main__':
                             delimiter=1, dtype='float')
 
     print('Training accuracy:')
-    report_scores(X_train, y_train, W, b, act)
+    report_scores(X_train, y_train, W, b, act, data_dir, 'train')
 
     X_test = np.genfromtxt(f'{data_dir}/Xtest',
                             delimiter=1, dtype='float')
@@ -111,4 +119,4 @@ if __name__ == '__main__':
                             delimiter=1, dtype='float')
 
     print('Testing accuracy:')
-    report_scores(X_test, y_test, W, b, act)
+    report_scores(X_test, y_test, W, b, act, data_dir, 'test')

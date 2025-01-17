@@ -39,4 +39,4 @@ wait
 cd ../..
 
 # Evaluate neural network performance in plaintext.
-python bin/evaluate_demo.py
+python bin/evaluate.py demo_data/batch_pw

@@ -70,23 +70,21 @@ def report_scores(X, y, W, b, act, data_dir, data_type):
         print('Avg. precision: {0:.2f}'.format(
             metrics.average_precision_score(y_true, y_score))
         )
-        # Plot ROC curve and save to file
-        fpr, tpr, _ = metrics.roc_curve(y_true, y_score)
+        # Plot ROC curve and precision-recall curve in subplots and save to file
         plt.figure()
+        fpr, tpr, _ = metrics.roc_curve(y_true, y_score)
+        plt.subplot(1, 2, 1)
         plt.plot(fpr, tpr)
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
         plt.title(f'ROC Curve ({data_type.capitalize()})')
-        plt.savefig(f'{data_dir}/roc_{data_type}.png')
-
-        # Plot precision-recall curve
+        plt.subplot(1, 2, 2)
         precision, recall, _ = metrics.precision_recall_curve(y_true, y_score)
-        plt.figure()
         plt.plot(recall, precision)
         plt.xlabel('Recall')
         plt.ylabel('Precision')
         plt.title(f'Precision-Recall Curve ({data_type.capitalize()})')
-        plt.savefig(f'{data_dir}/pr_{data_type}.png')
+        plt.savefig(f'{data_dir}/roc_pr_{data_type}.png')
     except Exception as e:
         sys.stderr.write(str(e))
         sys.stderr.write('\n')

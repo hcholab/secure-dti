@@ -26,7 +26,7 @@ bool mask_matrix(string data_dir, MPCEnv& mpc, string name,
   /* Read in matrix. */
   Mat<ZZ_p> matrix;
   Init(matrix, n_rows, n_cols);
-  
+
   string line;
   int i = 0;
   while(getline(fin, line)) {
@@ -41,7 +41,7 @@ bool mask_matrix(string data_dir, MPCEnv& mpc, string name,
     }
     i++;
   }
-  
+
   if (i != n_rows) {
     tcout() << "Error: Invalid number of rows: " << i << endl;
     return false;
@@ -67,7 +67,7 @@ bool mask_matrix(string data_dir, MPCEnv& mpc, string name,
 bool mask_data(string data_dir, MPCEnv& mpc) {
   vector<string> suffixes;
   suffixes = load_suffixes(Param::TRAIN_SUFFIXES);
-  
+
   mpc.SwitchSeed(1); /* Use CP1's seed. */
 
   fstream fs;
@@ -87,28 +87,28 @@ bool mask_data(string data_dir, MPCEnv& mpc) {
     if (!mask_matrix(data_dir, mpc, "X" + suffixes[i],
                      Param::N_FILE_BATCH, Param::FEATURE_RANK))
       return false;
-  
+
     if (!mask_matrix(data_dir, mpc, "y" + suffixes[i],
                      Param::N_FILE_BATCH, Param::N_CLASSES - 1))
       return false;
   }
-  
+
   mpc.RestoreSeed();
-  
+
   return true;
 }
 
 int main(int argc, char* argv[]) {
   if (argc < 3) {
-    tcout() << "Usage: ShareData party_id param_file [data_dir (for P3/SP)]" << endl;
+    tcout() << "Usage: ShareData party_id param_file [data_dir (for SPs)]" << endl;
     return 1;
   }
 
   /* Load party id. */
   string pid_str(argv[1]);
   int pid;
-  if (!Param::Convert(pid_str, pid, "party_id") || pid < 0 || pid > 3) {
-    tcout() << "Error: party_id should be 0, 1, 2, or 3" << endl;
+  if (!Param::Convert(pid_str, pid, "party_id") || pid < 0 || pid > 2) {
+    tcout() << "Error: party_id should be 0, 1, or 3" << endl;
     return 1;
   }
 
@@ -120,9 +120,9 @@ int main(int argc, char* argv[]) {
 
   /* Load data directory name. */
   string data_dir;
-  if (pid == 3) {
+  if (pid == 1 || pid == 2) {
     if (argc < 4) {
-      tcout() << "Error: for P3/SP, data directory should be provided as the last argument" << endl;
+      tcout() << "Error: for SPs, data directory should be provided as the last argument" << endl;
       return 1;
     }
     data_dir = argv[3];
@@ -137,8 +137,7 @@ int main(int argc, char* argv[]) {
   pairs.push_back(make_pair(0, 1));
   pairs.push_back(make_pair(0, 2));
   pairs.push_back(make_pair(1, 2));
-  pairs.push_back(make_pair(1, 3));
-  pairs.push_back(make_pair(2, 3));
+
   MPCEnv mpc;
   if (!mpc.Initialize(pid, pairs)) {
     tcout() << "MPC environment initialization failed" << endl;
@@ -146,7 +145,7 @@ int main(int argc, char* argv[]) {
   }
 
   /* Mask the data and save to file. */
-  bool success = true;  
+  bool success = true;
   if (pid == 3) {
     success = mask_data(data_dir, mpc);
     if (!success) {
@@ -173,7 +172,7 @@ int main(int argc, char* argv[]) {
     }
     mpc.SwitchSeed(3);
     mpc.ExportSeed(fs);
-    mpc.RestoreSeed();    
+    mpc.RestoreSeed();
     fs.close();
     success = true;
   }

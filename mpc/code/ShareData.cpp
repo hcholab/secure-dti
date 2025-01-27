@@ -14,7 +14,7 @@ using namespace NTL;
 using namespace std;
 
 bool mask_matrix(string data_dir, MPCEnv& mpc, string name,
-                 size_t n_rows, size_t n_cols) {
+                 size_t n_rows, size_t n_cols, int other_pid) {
   /* Open file. */
   string fname = data_dir + name;
   ifstream fin(fname.c_str());
@@ -51,30 +51,34 @@ bool mask_matrix(string data_dir, MPCEnv& mpc, string name,
   /* Mask matrix. */
   Mat<ZZ_p> mask;
   mpc.RandMat(mask, n_rows, n_cols);
-  matrix -= mask; /* Masked `matrix' should be sent to CP2. */
+  matrix -= mask; /* Masked `matrix' for the other party. */
+  mpc.SendMat(matrix, other_pid);
+  tcout() << "Sent masked matrix to " << other_pid << endl;
 
-  /* Save data to file. */
+  /* Receive matrix from the other party and save it to file. */
   fstream fs;
   fs.open((data_dir + name + "_masked.bin").c_str(),
           ios::out | ios::binary);
+  mpc.ReceiveMat(matrix, other_pid, n_rows, n_cols);
   mpc.WriteToFile(matrix, fs);
   fs.close();
-  tcout() << "Finished writing to file." << endl;
+  tcout() << "Received masked matrix from " << other_pid
+    << " and wrote it to file." << endl;
 
   return true;
 }
 
-bool mask_data(string data_dir, MPCEnv& mpc) {
+bool mask_data(string data_dir, MPCEnv& mpc, int other_pid) {
   vector<string> suffixes;
   suffixes = load_suffixes(Param::TRAIN_SUFFIXES);
 
-  mpc.SwitchSeed(1); /* Use CP1's seed. */
+  mpc.SwitchSeed(other_pid);
 
   fstream fs;
   string fname;
   for (int i = 0; i < suffixes.size(); i++) {
     /* Save seed state to file for each batch. */
-    fname = cache(1, "seed" + suffixes[i]);
+    fname = cache(other_pid, "seed" + suffixes[i]);
     fs.open(fname.c_str(), ios::out | ios::binary);
     if (!fs.is_open()) {
       tcout() << "Error: could not open " << fname << endl;
@@ -85,11 +89,11 @@ bool mask_data(string data_dir, MPCEnv& mpc) {
 
     /* Write batch to file. */
     if (!mask_matrix(data_dir, mpc, "X" + suffixes[i],
-                     Param::N_FILE_BATCH, Param::FEATURE_RANK))
+                     Param::N_FILE_BATCH, Param::FEATURE_RANK, other_pid))
       return false;
 
     if (!mask_matrix(data_dir, mpc, "y" + suffixes[i],
-                     Param::N_FILE_BATCH, Param::N_CLASSES - 1))
+                     Param::N_FILE_BATCH, Param::N_CLASSES - 1, other_pid))
       return false;
   }
 
@@ -146,35 +150,14 @@ int main(int argc, char* argv[]) {
 
   /* Mask the data and save to file. */
   bool success = true;
-  if (pid == 3) {
-    success = mask_data(data_dir, mpc);
+  if (pid == 1 || pid == 2) {
+    const int other_pid = 3 - pid; // 1 -> 2, 2 -> 1
+    success = mask_data(data_dir, mpc, other_pid);
     if (!success) {
       tcout() << "Data masking failed." << endl;
     } else {
-      tcout() << "Party 3 done streaming data." << endl;
+      tcout() << "Party " << pid << " done streaming data." << endl;
     }
-    mpc.SendBool(true, 2);
-
-  } else if (pid == 2) {
-    /* Keep CP2 alive until SP has shared data with it. */
-    mpc.ReceiveBool(3);
-    success = true;
-
-  } else if (pid == 1) {
-    /* CP1 needs to save its seed so it can reconstruct
-       the masked data.*/
-    string fname = cache(pid, "initial_seed");
-    fstream fs;
-    fs.open(fname.c_str(), ios::out | ios::binary);
-    if (!fs.is_open()) {
-      tcout() << "Error: could not open " << fname << endl;
-      return false;
-    }
-    mpc.SwitchSeed(3);
-    mpc.ExportSeed(fs);
-    mpc.RestoreSeed();
-    fs.close();
-    success = true;
   }
 
   /* Keep party 0 online until end of data masking. */

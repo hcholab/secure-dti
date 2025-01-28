@@ -13,6 +13,29 @@
 using namespace NTL;
 using namespace std;
 
+void send_masked_matrix(MPCEnv& mpc, Mat<ZZ_p>& matrix,
+                 size_t n_rows, size_t n_cols, int other_pid) {
+  Mat<ZZ_p> mask;
+  mpc.RandMat(mask, n_rows, n_cols);
+  matrix -= mask;
+  tcout() << "Created masked matrix for " << other_pid << endl;
+  mpc.SendMat(matrix, other_pid);
+  tcout() << "Sent masked matrix to " << other_pid << endl;
+}
+
+void receive_matrix(string data_dir, MPCEnv& mpc, string name,
+                    size_t n_rows, size_t n_cols, int other_pid) {
+  Mat<ZZ_p> matrix;
+  fstream fs;
+  fs.open((data_dir + name + "_masked.bin").c_str(),
+          ios::out | ios::binary);
+  mpc.ReceiveMat(matrix, other_pid, n_rows, n_cols);
+  mpc.WriteToFile(matrix, fs);
+  fs.close();
+  tcout() << "Received masked matrix from " << other_pid
+    << " and wrote it to file." << endl;
+}
+
 bool mask_matrix(string data_dir, MPCEnv& mpc, string name,
                  size_t n_rows, size_t n_cols, int other_pid) {
   /* Open file. */
@@ -48,22 +71,16 @@ bool mask_matrix(string data_dir, MPCEnv& mpc, string name,
   }
   fin.close();
 
-  /* Mask matrix. */
-  Mat<ZZ_p> mask;
-  mpc.RandMat(mask, n_rows, n_cols);
-  matrix -= mask; /* Masked `matrix' for the other party. */
-  mpc.SendMat(matrix, other_pid);
-  tcout() << "Sent masked matrix to " << other_pid << endl;
-
-  /* Receive matrix from the other party and save it to file. */
-  fstream fs;
-  fs.open((data_dir + name + "_masked.bin").c_str(),
-          ios::out | ios::binary);
-  mpc.ReceiveMat(matrix, other_pid, n_rows, n_cols);
-  mpc.WriteToFile(matrix, fs);
-  fs.close();
-  tcout() << "Received masked matrix from " << other_pid
-    << " and wrote it to file." << endl;
+  /* Send and receive a masked matrix.
+   * Order of operations is swapped depending on the party,
+   * to avoid a deadlock. */
+  if (other_pid == 2) {
+    send_masked_matrix(mpc, matrix, n_rows, n_cols, other_pid);
+    receive_matrix(data_dir, mpc, name, n_rows, n_cols, other_pid);
+  } else {
+    receive_matrix(data_dir, mpc, name, n_rows, n_cols, other_pid);
+    send_masked_matrix(mpc, matrix, n_rows, n_cols, other_pid);
+  }
 
   return true;
 }

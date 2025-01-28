@@ -19,7 +19,7 @@ void send_masked_matrix(MPCEnv& mpc, string name, Mat<ZZ_p>& matrix,
   mpc.RandMat(mask, n_rows, n_cols);
   matrix -= mask;
   mpc.SendMat(matrix, other_pid);
-  tcout() << "Sent masked matrix for '" << name << "' to " << other_pid << endl;
+  tcout() << "Sent masked matrix for " << name << " to " << other_pid << endl;
 }
 
 void recv_masked_matrix(string data_dir, MPCEnv& mpc, string name,

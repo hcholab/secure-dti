@@ -16,15 +16,12 @@ cd mpc/code/
 ./bin/GenerateKey ../key/P0_P1.key
 ./bin/GenerateKey ../key/P0_P2.key
 ./bin/GenerateKey ../key/P1_P2.key
-./bin/GenerateKey ../key/P1_P3.key
-./bin/GenerateKey ../key/P2_P3.key
 ./bin/GenerateKey ../key/global.key
 
 # Mask data.
 ./bin/ShareData 0 ../par/demo.par.0.txt &
-./bin/ShareData 1 ../par/demo.par.1.txt &
-./bin/ShareData 2 ../par/demo.par.2.txt &
-./bin/ShareData 3 ../par/demo.par.3.txt ../../demo_data/batch_pw/ &
+./bin/ShareData 1 ../par/demo.par.1.txt ../../demo_data/batch_pw1/ &
+./bin/ShareData 2 ../par/demo.par.2.txt ../../demo_data/batch_pw2/ &
 wait
 
 # Wait for system ports to settle down.

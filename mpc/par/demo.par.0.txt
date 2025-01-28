@@ -21,7 +21,7 @@ TEST_SUFFIXES ../../demo_data/batch_pw/test_suffixes.txt
 PROFILER 1
 
 # DEMO.
-N_FILE_BATCH 150
+N_FILE_BATCH 75
 MAX_EPOCHS 50
 BATCH_SIZE 50
 N_NEURONS 100

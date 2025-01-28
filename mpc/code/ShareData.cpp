@@ -23,7 +23,7 @@ void send_masked_matrix(MPCEnv& mpc, Mat<ZZ_p>& matrix,
   tcout() << "Sent masked matrix to " << other_pid << endl;
 }
 
-void receive_matrix(string data_dir, MPCEnv& mpc, string name,
+void recv_masked_matrix(string data_dir, MPCEnv& mpc, string name,
                     size_t n_rows, size_t n_cols, int other_pid) {
   Mat<ZZ_p> matrix;
   fstream fs;
@@ -76,9 +76,9 @@ bool mask_matrix(string data_dir, MPCEnv& mpc, string name,
    * to avoid a deadlock. */
   if (other_pid == 2) {
     send_masked_matrix(mpc, matrix, n_rows, n_cols, other_pid);
-    receive_matrix(data_dir, mpc, name, n_rows, n_cols, other_pid);
+    recv_masked_matrix(data_dir, mpc, name, n_rows, n_cols, other_pid);
   } else {
-    receive_matrix(data_dir, mpc, name, n_rows, n_cols, other_pid);
+    recv_masked_matrix(data_dir, mpc, name, n_rows, n_cols, other_pid);
     send_masked_matrix(mpc, matrix, n_rows, n_cols, other_pid);
   }
 

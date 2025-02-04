@@ -62,7 +62,7 @@ bool read_matrix(Mat<ZZ_p>& matrix, ifstream& ifs, string fname,
   mpc.ReadFromFile(matrix, ifs, n_rows, n_cols);
   ifs.close();
   return true;
-}  
+}
 
 void initialize_model(vector<Mat<ZZ_p> >& W, vector<Vec<ZZ_p> >& b,
                       vector<Mat<ZZ_p> >& dW, vector<Vec<ZZ_p> >& db,
@@ -83,7 +83,7 @@ void initialize_model(vector<Mat<ZZ_p> >& W, vector<Vec<ZZ_p> >& b,
     } else if (Param::N_HIDDEN == 0 && l == 0) {
       W_layer.SetDims(Param::FEATURE_RANK, Param::N_CLASSES - 1);
       b_layer.SetLength(Param::N_CLASSES - 1);
-    
+
     /* Set dimensions of the input layer. */
     } else if (l == 0) {
       W_layer.SetDims(Param::FEATURE_RANK, Param::N_NEURONS);
@@ -93,19 +93,19 @@ void initialize_model(vector<Mat<ZZ_p> >& W, vector<Vec<ZZ_p> >& b,
     } else if (l == Param::N_HIDDEN) {
       W_layer.SetDims(Param::N_NEURONS, Param::N_CLASSES - 1);
       b_layer.SetLength(Param::N_CLASSES - 1);
-      
+
     /* Set dimensions of the hidden layers. */
     } else {
       W_layer.SetDims(Param::N_NEURONS, Param::N_NEURONS);
       b_layer.SetLength(Param::N_NEURONS);
     }
-    
+
     dW_layer.SetDims(W_layer.NumRows(), W_layer.NumCols());
     Init(vW_layer, W_layer.NumRows(), W_layer.NumCols());
-    
+
     db_layer.SetLength(b_layer.length());
     Init(vb_layer, b_layer.length());
-     
+
     Mat<ZZ_p> W_r;
     Vec<ZZ_p> b_r;
     if (pid == 2) {
@@ -117,7 +117,7 @@ void initialize_model(vector<Mat<ZZ_p> >& W, vector<Vec<ZZ_p> >& b,
           DoubleToFP(W_layer[i][j], noise, Param::NBIT_K, Param::NBIT_F);
         }
       }
-      
+
       Init(b_layer, b_layer.length());
 
       /* Blind the data. */
@@ -127,7 +127,7 @@ void initialize_model(vector<Mat<ZZ_p> >& W, vector<Vec<ZZ_p> >& b,
       mpc.RestoreSeed();
       W_layer -= W_r;
       b_layer -= b_r;
-      
+
     } else if (pid == 1) {
       /* CP1 will just have the random data. */
       mpc.SwitchSeed(2);
@@ -137,7 +137,7 @@ void initialize_model(vector<Mat<ZZ_p> >& W, vector<Vec<ZZ_p> >& b,
       W_layer = W_r;
       b_layer = b_r;
     }
-    
+
     W.push_back(W_layer);
     dW.push_back(dW_layer);
     vW.push_back(vW_layer);
@@ -155,7 +155,7 @@ void gradient_descent(Mat<ZZ_p>& X, Mat<ZZ_p>& y,
                       int epoch, int pid, MPCEnv& mpc) {
   if (pid == 2)
     tcout() << "Epoch: " << epoch << endl;
-      
+
   /************************
    * Forward propagation. *
    ************************/
@@ -188,7 +188,7 @@ void gradient_descent(Mat<ZZ_p>& X, Mat<ZZ_p>& y,
     mpc.MultElem(after_relu, activation, relu);
     /* Note: Do not call Trunc() here because IsPositive()
        returns a secret shared integer, not a fixed point.*/
-    
+
     // TODO: Implement dropout.
 
     /* Save activation for backpropagation. */
@@ -196,7 +196,7 @@ void gradient_descent(Mat<ZZ_p>& X, Mat<ZZ_p>& y,
     relus.push_back(relu);
   }
 
-  
+
   /**************************
    * Evaluate class scores. *
    **************************/
@@ -245,12 +245,12 @@ void gradient_descent(Mat<ZZ_p>& X, Mat<ZZ_p>& y,
     mpc.IsPositive(hinge, mod_scores);
     mpc.MultElem(dscores, y, hinge);
     /* Note: No need to not call Trunc(). */
-    
+
   } else {
     /* Compute derivative of the scores using MSE loss. */
     dscores = scores - y;
   }
-  
+
   ZZ_p norm_examples;
   DoubleToFP(norm_examples, 1. / ((double) X.NumRows()),
              Param::NBIT_K, Param::NBIT_F);
@@ -266,7 +266,7 @@ void gradient_descent(Mat<ZZ_p>& X, Mat<ZZ_p>& y,
    *********************/
   Mat<ZZ_p> dhidden = dscores;
   for (int l = Param::N_HIDDEN; l >= 0; l--) {
-    
+
     if (pid == 2)
       tcout() << "Back prop, multiplication." << endl;
     /* Compute derivative of weights. */
@@ -280,7 +280,7 @@ void gradient_descent(Mat<ZZ_p>& X, Mat<ZZ_p>& y,
     }
     mpc.MultMat(dW[l], X_T, dhidden);
     mpc.Trunc(dW[l]);
-  
+
     /* Add regularization term to weights. */
     ZZ_p REG;
     DoubleToFP(REG, Param::REG, Param::NBIT_K, Param::NBIT_F);
@@ -344,6 +344,13 @@ void gradient_descent(Mat<ZZ_p>& X, Mat<ZZ_p>& y,
   }
 }
 
+void concat_mat(Mat<ZZ_p>& A, const Mat<ZZ_p>& B) {
+  long numARows = A.NumRows();
+  A.SetDims(numARows + B.NumRows(), A.NumCols());
+  for (long i = 0; i < B.NumRows(); i++)
+    A[numARows + i] = B[i];
+}
+
 void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
               int pid, MPCEnv& mpc) {
   if (pid == 0)
@@ -351,40 +358,40 @@ void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
        but they do not need to be filled. */
     return;
   ifstream ifs;
-  
-  /* Load seed for CP1. */
-  if (pid == 1) {
-    string fname = "../cache/test_seed" + suffix + ".bin";
-    ifs.open(fname.c_str(), ios::binary);
-    if (!ifs.is_open()) {
-      tcout() << "Error: could not open " << fname << endl;
-      return;
-    }
-    mpc.ImportSeed(20, ifs);
-    ifs.close();
-  }
 
-  if (pid == 2) {
-    /* In CP2, read in blinded matrix. */
-    tcout() << "reading in " << Param::FEATURES_FILE << suffix << endl;
-    if (!read_matrix(X, ifs, Param::FEATURES_FILE + suffix + "_masked.bin",
-                     X.NumRows(), X.NumCols(), mpc))
-      return;
-    
-    tcout() << "reading in " << Param::LABELS_FILE << suffix << endl;
-    if (!read_matrix(y, ifs, Param::LABELS_FILE + suffix + "_masked.bin",
-                     y.NumRows(), y.NumCols(), mpc))
-      return;
-
-  } else if (pid == 1) {
-    /* In CP1, use seed to regenerate blinding factors.
-       These need to be generated in the same order as the
-       original blinding factors! */
-    mpc.SwitchSeed(20);
-    mpc.RandMat(X, X.NumRows(), X.NumCols());
-    mpc.RandMat(y, y.NumRows(), y.NumCols());
-    mpc.RestoreSeed();
+  /* Load seed */
+  string fname = "../cache/test_seed" + suffix + ".bin";
+  ifs.open(fname.c_str(), ios::binary);
+  if (!ifs.is_open()) {
+    tcout() << "Error: could not open " << fname << endl;
+    return;
   }
+  mpc.ImportSeed(20, ifs);
+  ifs.close();
+
+  /* Read in blinded matrix from the other party. */
+  Mat<ZZ_p> Xm, ym;
+  tcout() << "reading in " << Param::FEATURES_FILE << suffix << endl;
+  if (!read_matrix(Xm, ifs, Param::FEATURES_FILE + suffix + "_masked.bin",
+                   X.NumRows(), X.NumCols(), mpc))
+    return;
+
+  tcout() << "reading in " << Param::LABELS_FILE << suffix << endl;
+  if (!read_matrix(ym, ifs, Param::LABELS_FILE + suffix + "_masked.bin",
+                   y.NumRows(), y.NumCols(), mpc))
+    return;
+
+  /* Use seed to regenerate blinding factors.
+     These need to be generated in the same order as the
+     original blinding factors! */
+  mpc.SwitchSeed(20);
+  mpc.RandMat(X, X.NumRows(), X.NumCols());
+  mpc.RandMat(y, y.NumRows(), y.NumCols());
+  mpc.RestoreSeed();
+
+  /* Concatenate results */
+  concat_mat(X, Xm);
+  concat_mat(y, ym);
 }
 
 void model_update(Mat<ZZ_p>& X, Mat<ZZ_p>& y,
@@ -415,7 +422,7 @@ void model_update(Mat<ZZ_p>& X, Mat<ZZ_p>& y,
       X_batch[j - base_j] = X[random_idx[j]];
       y_batch[j - base_j] = y[random_idx[j]];
     }
-    
+
     /* Do one round of mini-batch gradient descent. */
     gradient_descent(X_batch, y_batch,
                      W, b, dW, db, vW, vb, act, relus,
@@ -429,7 +436,7 @@ void model_update(Mat<ZZ_p>& X, Mat<ZZ_p>& y,
         W_out += W[l];
         reveal(W_out, cache(pid, "W" + to_string(l) + "_" +
                             to_string(epoch)), mpc);
-        
+
         Vec<ZZ_p> b_out;
         Init(b_out, b[l].length());
         b_out += b[l];
@@ -468,9 +475,9 @@ bool dti_protocol(MPCEnv& mpc, int pid) {
   Mat<ZZ_p> X, y;
   X.SetDims(Param::N_FILE_BATCH, Param::FEATURE_RANK);
   y.SetDims(Param::N_FILE_BATCH, Param::N_CLASSES - 1);
-  string suffix = suffixes[rand() % suffixes.size()];  
+  string suffix = suffixes[rand() % suffixes.size()];
   load_X_y(suffix, X, y, pid, mpc);
-  
+
   /* Do gradient descent over multiple training epochs. */
   for (int epoch = 0; epoch < Param::MAX_EPOCHS;
        /* model_update() updates epoch. */) {
@@ -482,21 +489,21 @@ bool dti_protocol(MPCEnv& mpc, int pid) {
 
     load_X_y(suffix, X, y, pid, mpc);
   }
-  
+
   if (pid > 0) {
     for (int l = 0; l < Param::N_HIDDEN + 1; l++) {
       Mat<ZZ_p> W_out;
       Init(W_out, W[l].NumRows(), W[l].NumCols());
       W_out += W[l];
       reveal(W_out, cache(pid, "W" + to_string(l) + "_final"), mpc);
-        
+
       Vec<ZZ_p> b_out;
       Init(b_out, b[l].length());
       b_out += b[l];
       reveal(b_out, cache(pid, "b" + to_string(l) + "_final"), mpc);
     }
   }
-  
+
   return true;
 }
 

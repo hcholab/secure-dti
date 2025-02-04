@@ -1,0 +1,4 @@
+# Ignore everything except for specific files and folders;
+# this avoids unnecesary rebuilds in the GitHub Workflow
+*
+!/mpc

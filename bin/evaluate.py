@@ -19,7 +19,7 @@ def report_scores(X, y, W, b, act, data_dir, pid, data_type):
         if l == 0:
             act[l] = np.maximum(0, np.dot(X, W[l]) + b[l])
         else:
-            act[l] = np.maximum(0, np.dot(act[l-1], W[l]) + b[l])
+            act[l] = np.maximum(0, np.dot(act[l - 1], W[l]) + b[l])
 
     if N_HIDDEN == 0:
         scores = np.dot(X, W[-1]) + b[-1]
@@ -35,11 +35,7 @@ def report_scores(X, y, W, b, act, data_dir, pid, data_type):
         predicted_class[scores >= 0.5] = 1
 
     sys.stdout.write(str(datetime.datetime.now()) + ' | ')
-    print('Batch accuracy: {}'
-          .format(metrics.accuracy_score(
-              y, predicted_class
-          ))
-    )
+    print('Batch accuracy: {}'.format(metrics.accuracy_score(y, predicted_class)))
 
     y_true.extend(list(y))
     y_pred.extend(list(predicted_class))
@@ -48,28 +44,20 @@ def report_scores(X, y, W, b, act, data_dir, pid, data_type):
     # Output aggregated scores.
     try:
         sys.stdout.write(str(datetime.datetime.now()) + ' | ')
-        print('Accuracy: {0:.2f}'.format(
-            metrics.accuracy_score(y_true, y_pred))
-        )
+        print('Accuracy: {0:.2f}'.format(metrics.accuracy_score(y_true, y_pred)))
         sys.stdout.write(str(datetime.datetime.now()) + ' | ')
-        print('F1: {0:.2f}'.format(
-            metrics.f1_score(y_true, y_pred))
-        )
+        print('F1: {0:.2f}'.format(metrics.f1_score(y_true, y_pred)))
         sys.stdout.write(str(datetime.datetime.now()) + ' | ')
-        print('Precision: {0:.2f}'.format(
-            metrics.precision_score(y_true, y_pred))
-        )
+        print('Precision: {0:.2f}'.format(metrics.precision_score(y_true, y_pred)))
         sys.stdout.write(str(datetime.datetime.now()) + ' | ')
-        print('Recall: {0:.2f}'.format(
-            metrics.recall_score(y_true, y_pred))
-        )
+        print('Recall: {0:.2f}'.format(metrics.recall_score(y_true, y_pred)))
         sys.stdout.write(str(datetime.datetime.now()) + ' | ')
-        print('ROC AUC: {0:.2f}'.format(
-            metrics.roc_auc_score(y_true, y_score))
-        )
+        print('ROC AUC: {0:.2f}'.format(metrics.roc_auc_score(y_true, y_score)))
         sys.stdout.write(str(datetime.datetime.now()) + ' | ')
-        print('Avg. precision: {0:.2f}'.format(
-            metrics.average_precision_score(y_true, y_score))
+        print(
+            'Avg. precision: {0:.2f}'.format(
+                metrics.average_precision_score(y_true, y_score)
+            )
         )
 
         # Plot ROC curve and precision-recall curve in subplots and save to file
@@ -99,19 +87,20 @@ def report_scores(X, y, W, b, act, data_dir, pid, data_type):
 
 
 def load_model():
-    W = [ [] for _ in range(N_HIDDEN + 1) ]
-    for l in range(N_HIDDEN+1):
+    W = [[] for _ in range(N_HIDDEN + 1)]
+    for l in range(N_HIDDEN + 1):
         W[l] = np.loadtxt('mpc/cache/test_P1_W{}_final.bin'.format(l))
 
-     # Initialize bias vector with zeros.
-    b = [ []  for _ in range(N_HIDDEN + 1) ]
-    for l in range(N_HIDDEN+1):
+    # Initialize bias vector with zeros.
+    b = [[] for _ in range(N_HIDDEN + 1)]
+    for l in range(N_HIDDEN + 1):
         b[l] = np.loadtxt('mpc/cache/test_P1_b{}_final.bin'.format(l))
 
     # Initialize activations.
-    act = [ [] for _ in range(N_HIDDEN) ]
+    act = [[] for _ in range(N_HIDDEN)]
 
     return W, b, act
+
 
 if __name__ == '__main__':
     data_dir = sys.argv[1].rstrip('/')

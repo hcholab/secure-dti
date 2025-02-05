@@ -106,11 +106,11 @@ bool mask_data(string data_dir, MPCEnv& mpc, int other_pid) {
     fs.close();
 
     /* Write batch to file. */
-    if (!mask_matrix(data_dir, mpc, "X" + suffixes[i],
+    if (!mask_matrix(data_dir, mpc, "X_P" + other_pid + suffixes[i],
                      Param::N_FILE_BATCH, Param::FEATURE_RANK, other_pid))
       return false;
 
-    if (!mask_matrix(data_dir, mpc, "y" + suffixes[i],
+    if (!mask_matrix(data_dir, mpc, "y_P" + other_pid + suffixes[i],
                      Param::N_FILE_BATCH, Param::N_CLASSES - 1, other_pid))
       return false;
   }

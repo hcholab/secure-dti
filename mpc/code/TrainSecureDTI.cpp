@@ -54,6 +54,7 @@ void reveal(Mat<ZZ_p> X, string fname, MPCEnv& mpc) {
 
 bool read_matrix(Mat<ZZ_p>& matrix, ifstream& ifs, string fname,
                  size_t n_rows, size_t n_cols, MPCEnv& mpc) {
+  tcout() << "reading in " << fname << endl;
   ifs.open(fname.c_str(), ios::in | ios::binary);
   if (!ifs.is_open()) {
     tcout() << "Could not open : " << fname << endl;
@@ -344,11 +345,16 @@ void gradient_descent(Mat<ZZ_p>& X, Mat<ZZ_p>& y,
   }
 }
 
-void concat_mat(Mat<ZZ_p>& A, const Mat<ZZ_p>& B) {
+void concat_mat(MPCEnv& mpc, Mat<ZZ_p>& A, const Mat<ZZ_p>& B, string fname) {
   long numARows = A.NumRows();
   A.SetDims(numARows + B.NumRows(), A.NumCols());
   for (long i = 0; i < B.NumRows(); i++)
     A[numARows + i] = B[i];
+
+  fstream fs(fname.c_str(), ios::out | ios::binary);
+  mpc.WriteToFile(A, fs);
+  fs.close();
+  tcout() << "Wrote full matrix to " << fname << endl;
 }
 
 void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
@@ -371,12 +377,10 @@ void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
 
   /* Read in blinded matrix from the other party. */
   Mat<ZZ_p> Xm, ym;
-  tcout() << "reading in " << Param::FEATURES_FILE << suffix << endl;
   if (!read_matrix(Xm, ifs, Param::FEATURES_FILE + suffix + "_masked.bin",
                    X.NumRows(), X.NumCols(), mpc))
     return;
 
-  tcout() << "reading in " << Param::LABELS_FILE << suffix << endl;
   if (!read_matrix(ym, ifs, Param::LABELS_FILE + suffix + "_masked.bin",
                    y.NumRows(), y.NumCols(), mpc))
     return;
@@ -390,8 +394,8 @@ void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
   mpc.RestoreSeed();
 
   /* Concatenate results */
-  concat_mat(X, Xm);
-  concat_mat(y, ym);
+  concat_mat(mpc, X, Xm, Param::FEATURES_FILE + suffix + "_full.bin");
+  concat_mat(mpc,y, ym, Param::LABELS_FILE + suffix + "_full.bin");
 }
 
 void model_update(Mat<ZZ_p>& X, Mat<ZZ_p>& y,

@@ -96,7 +96,9 @@ bool mask_data(string data_dir, MPCEnv& mpc, int other_pid) {
     /* Save seed state to file for each batch. */
     fname = cache(other_pid, "seed" + suffixes[i]);
     fs.open(fname.c_str(), ios::out | ios::binary);
-    if (!fs.is_open()) {
+    if (fs.is_open()) {
+      tcout() << "Saved seed to " << fname << endl;
+    } else {
       tcout() << "Error: could not open " << fname << endl;
       return false;
     }

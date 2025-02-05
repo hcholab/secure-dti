@@ -360,7 +360,7 @@ void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
   ifstream ifs;
 
   /* Load seed */
-  string fname = "../cache/test_seed" + suffix + ".bin";
+  string fname = Param::CACHE_FILE_PREFIX + "_seed" + suffix + ".bin";
   ifs.open(fname.c_str(), ios::binary);
   if (!ifs.is_open()) {
     tcout() << "Error: could not open " << fname << endl;

@@ -9,7 +9,8 @@ import sys
 N_HIDDEN = 1
 LOSS = 'hinge'
 
-def report_scores(X, y, W, b, act, data_dir, data_type):
+
+def report_scores(X, y, W, b, act, data_dir, pid, data_type):
     y_true = []
     y_pred = []
     y_score = []
@@ -89,7 +90,7 @@ def report_scores(X, y, W, b, act, data_dir, data_type):
         plt.title(f'Precision-Recall Curve ({data_type.capitalize()})')
 
         plt.tight_layout()
-        plt.savefig(f'{data_dir}/roc_pr_{data_type}.png')
+        plt.savefig(f'{data_dir}/roc_pr_P{pid}{data_type}.png')
     except Exception as e:
         sys.stderr.write(str(e))
         sys.stderr.write('\n')
@@ -114,21 +115,19 @@ def load_model():
 
 if __name__ == '__main__':
     data_dir = sys.argv[1].rstrip('/')
+    pid = sys.argv[2]
+
+    print(f"Evaluating party {pid}")
 
     W, b, act = load_model()
 
-    X_train = np.genfromtxt(f'{data_dir}/Xtrain',
-                            delimiter=1, dtype='float')
-    y_train = np.genfromtxt(f'{data_dir}/ytrain',
-                            delimiter=1, dtype='float')
+    for data_type in ('train', 'test'):
+        X = np.genfromtxt(
+            f'{data_dir}/X_{pid}{data_type}_final.bin', delimiter=1, dtype='float'
+        )
+        y = np.genfromtxt(
+            f'{data_dir}/y_{pid}{data_type}_final.bin', delimiter=1, dtype='float'
+        )
 
-    print('Training accuracy:')
-    report_scores(X_train, y_train, W, b, act, data_dir, 'train')
-
-    X_test = np.genfromtxt(f'{data_dir}/Xtest',
-                            delimiter=1, dtype='float')
-    y_test = np.genfromtxt(f'{data_dir}/ytest',
-                            delimiter=1, dtype='float')
-
-    print('Testing accuracy:')
-    report_scores(X_test, y_test, W, b, act, data_dir, 'test')
+        print(f'{data_type.capitalize()} accuracy:')
+        report_scores(X, y, W, b, act, data_dir, pid, data_type)

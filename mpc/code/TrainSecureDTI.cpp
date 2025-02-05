@@ -394,8 +394,8 @@ void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
   mpc.RestoreSeed();
 
   /* Concatenate results */
-  concat_mat(mpc, X, Xm, Param::FEATURES_FILE + suffix + "_full.bin");
-  concat_mat(mpc,y, ym, Param::LABELS_FILE + suffix + "_full.bin");
+  concat_mat(mpc, X, Xm, Param::FEATURES_FILE + suffix + "_final.bin");
+  concat_mat(mpc, y, ym, Param::LABELS_FILE + suffix + "_final.bin");
 }
 
 void model_update(Mat<ZZ_p>& X, Mat<ZZ_p>& y,

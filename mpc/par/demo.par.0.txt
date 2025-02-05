@@ -14,8 +14,8 @@ NUM_THREADS 20
 
 # DTI
 FEATURE_RANK 6903
-FEATURES_FILE ../../demo_data/batch_pw/X
-LABELS_FILE ../../demo_data/batch_pw/y
+FEATURES_FILE ../../demo_data/batch_pw/X_P0
+LABELS_FILE ../../demo_data/batch_pw/y_P0
 TRAIN_SUFFIXES ../../demo_data/batch_pw/train_suffixes.txt
 TEST_SUFFIXES ../../demo_data/batch_pw/test_suffixes.txt
 PROFILER 1

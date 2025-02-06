@@ -11,7 +11,7 @@ N_HIDDEN = 1
 LOSS = 'hinge'
 
 
-def report_scores(X, y, W, b, act, data_dir, data_type):
+def report_scores(X, y, W, b, act, data_dir, test: bool):
     y_true = []
     y_pred = []
     y_score = []
@@ -64,27 +64,28 @@ def report_scores(X, y, W, b, act, data_dir, data_type):
         # Plot ROC curve and precision-recall curve in subplots and save to file
         plt.figure(figsize=(12, 5))
 
+        if not test:
+            return
+
         fpr, tpr, _ = metrics.roc_curve(y_true, y_score)
         plt.subplot(1, 2, 1)
         plt.plot(fpr, tpr)
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
-        plt.title(f'ROC Curve ({data_type.capitalize()})')
+        plt.title(f'ROC Curve')
 
         plt.subplot(1, 2, 2)
         precision, recall, _ = metrics.precision_recall_curve(y_true, y_score)
         plt.plot(recall, precision)
         plt.xlabel('Recall')
         plt.ylabel('Precision')
-        plt.title(f'Precision-Recall Curve ({data_type.capitalize()})')
+        plt.title(f'Precision-Recall Curve')
 
         plt.tight_layout()
-        plt.savefig(f'{data_dir}/roc_pr_{data_type}.png')
+        plt.savefig(f'{data_dir}/roc_pr.png')
     except Exception as e:
         sys.stderr.write(str(e))
         sys.stderr.write('\n')
-
-    return y_true, y_pred, y_score
 
 
 def load_model():
@@ -108,13 +109,13 @@ if __name__ == '__main__':
 
     W, b, act = load_model()
 
-    for data_type in ('train', 'test'):
+    for data_type, suffix in (('train', '_final'), ('test', '')):
         X = np.genfromtxt(
-            f'{data_dir}/X{data_type}_final.bin', delimiter=1, dtype='float'
+            f'{data_dir}/X{data_type}{suffix}', delimiter=1, dtype='float'
         )
         y = np.genfromtxt(
-            f'{data_dir}/y{data_type}_final.bin', delimiter=1, dtype='float'
+            f'{data_dir}/y{data_type}{suffix}', delimiter=1, dtype='float'
         )
 
         print(f'{data_type.capitalize()} accuracy:')
-        report_scores(X, y, W, b, act, data_dir, data_type)
+        report_scores(X, y, W, b, act, data_dir, data_type == "test")

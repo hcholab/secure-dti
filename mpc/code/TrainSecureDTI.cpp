@@ -345,14 +345,22 @@ void gradient_descent(Mat<ZZ_p>& X, Mat<ZZ_p>& y,
   }
 }
 
-void concat_mat(MPCEnv& mpc, Mat<ZZ_p>& A, const Mat<ZZ_p>& B, string fname) {
+void concat_mat(MPCEnv& mpc, Mat<ZZ_p>& A, const Mat<ZZ_p>& B) {
   long numARows = A.NumRows();
   A.SetDims(numARows + B.NumRows(), A.NumCols());
   for (long i = 0; i < B.NumRows(); i++)
     A[numARows + i] = B[i];
+}
 
-  fstream fs(fname.c_str(), ios::out | ios::binary);
-  mpc.WriteToFile(A, fs);
+void export_mat(MPCEnv& mpc, Mat<ZZ_p>& A, string fname) {
+  fstream fs(fname.c_str(), ios::out);
+  for (long i = 0; i < A.NumRows(); i++) {
+    for (long j = 0; j < A.NumCols(); j++) {
+      double val = FPToDouble(A[i][j], Param::NBIT_K, Param::NBIT_F);
+      fs << (round(val) > 0.5 ? "1" : "0");
+    }
+    fs << endl;
+  }
   fs.close();
   tcout() << "Wrote matrix to " << fname << endl;
 }
@@ -394,8 +402,8 @@ void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
   mpc.RestoreSeed();
 
   /* Concatenate results */
-  concat_mat(mpc, X, Xm, Param::FEATURES_FILE + suffix + "_final.bin");
-  concat_mat(mpc, y, ym, Param::LABELS_FILE + suffix + "_final.bin");
+  concat_mat(mpc, X, Xm);
+  concat_mat(mpc, y, ym);
 }
 
 void model_update(Mat<ZZ_p>& X, Mat<ZZ_p>& y,
@@ -481,6 +489,11 @@ bool dti_protocol(MPCEnv& mpc, int pid) {
   y.SetDims(Param::N_FILE_BATCH, Param::N_CLASSES - 1);
   string suffix = suffixes[rand() % suffixes.size()];
   load_X_y(suffix, X, y, pid, mpc);
+
+  if (pid > 0) {
+    export_mat(mpc, X, Param::FEATURES_FILE + suffix + "_final");
+    export_mat(mpc, y, Param::LABELS_FILE + suffix + "_final");
+  }
 
   /* Do gradient descent over multiple training epochs. */
   for (int epoch = 0; epoch < Param::MAX_EPOCHS;

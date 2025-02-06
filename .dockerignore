@@ -1,4 +1,7 @@
 # Ignore everything except for specific files and folders;
 # this avoids unnecesary rebuilds in the GitHub Workflow
 *
+!/bin
+!/demo_data/stitch
 !/mpc
+!demo.sh

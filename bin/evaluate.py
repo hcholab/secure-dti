@@ -1,16 +1,17 @@
 import datetime
+import random
+import sys
+from string import ascii_lowercase
+
 import matplotlib.pyplot as plt
 import numpy as np
-import random
 from sklearn import metrics
-from string import ascii_lowercase
-import sys
 
 N_HIDDEN = 1
 LOSS = 'hinge'
 
 
-def report_scores(X, y, W, b, act, data_dir, pid, data_type):
+def report_scores(X, y, W, b, act, data_dir, data_type):
     y_true = []
     y_pred = []
     y_score = []
@@ -78,7 +79,7 @@ def report_scores(X, y, W, b, act, data_dir, pid, data_type):
         plt.title(f'Precision-Recall Curve ({data_type.capitalize()})')
 
         plt.tight_layout()
-        plt.savefig(f'{data_dir}/roc_pr_P{pid}{data_type}.png')
+        plt.savefig(f'{data_dir}/roc_pr_{data_type}.png')
     except Exception as e:
         sys.stderr.write(str(e))
         sys.stderr.write('\n')
@@ -104,19 +105,16 @@ def load_model():
 
 if __name__ == '__main__':
     data_dir = sys.argv[1].rstrip('/')
-    pid = sys.argv[2]
-
-    print(f"Evaluating party {pid}")
 
     W, b, act = load_model()
 
     for data_type in ('train', 'test'):
         X = np.genfromtxt(
-            f'{data_dir}/X_{pid}{data_type}_final.bin', delimiter=1, dtype='float'
+            f'{data_dir}/X{data_type}_final.bin', delimiter=1, dtype='float'
         )
         y = np.genfromtxt(
-            f'{data_dir}/y_{pid}{data_type}_final.bin', delimiter=1, dtype='float'
+            f'{data_dir}/y{data_type}_final.bin', delimiter=1, dtype='float'
         )
 
         print(f'{data_type.capitalize()} accuracy:')
-        report_scores(X, y, W, b, act, data_dir, pid, data_type)
+        report_scores(X, y, W, b, act, data_dir, data_type)

@@ -22,7 +22,7 @@ for f in X y; do
 done
 
 # Create suffix files for each party
-for dir in batch_pw1 batch_pw2; do
+for dir in batch_pw batch_pw1 batch_pw2; do
     for suffix in train test; do
         echo ${suffix} > "${dir}/${suffix}_suffixes.txt"
     done

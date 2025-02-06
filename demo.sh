@@ -4,6 +4,8 @@
 # Tasks should be split up over multiple machines according
 # to the description in the README.
 
+set -euo pipefail
+
 # Generate data.
 sh bin/generate_batches_pw.sh demo_
 
@@ -36,5 +38,5 @@ wait
 cd ../..
 
 # Evaluate neural network performance in plaintext.
-python bin/evaluate.py demo_data/batch_pw 1
-python bin/evaluate.py demo_data/batch_pw 2
+python bin/evaluate.py demo_data/batch_pw1
+python bin/evaluate.py demo_data/batch_pw2

@@ -354,7 +354,7 @@ void concat_mat(MPCEnv& mpc, Mat<ZZ_p>& A, const Mat<ZZ_p>& B, string fname) {
   fstream fs(fname.c_str(), ios::out | ios::binary);
   mpc.WriteToFile(A, fs);
   fs.close();
-  tcout() << "Wrote full matrix to " << fname << endl;
+  tcout() << "Wrote matrix to " << fname << endl;
 }
 
 void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,

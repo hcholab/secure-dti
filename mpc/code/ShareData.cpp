@@ -26,8 +26,8 @@ void recv_masked_matrix(string data_dir, MPCEnv& mpc, string name,
                     size_t n_rows, size_t n_cols, int other_pid) {
   Mat<ZZ_p> matrix;
   fstream fs;
-  string fname = name + "_masked.bin";
-  fs.open((data_dir + fname).c_str(), ios::out | ios::binary);
+  string fname = data_dir + name + "_masked.bin";
+  fs.open(fname.c_str(), ios::out | ios::binary);
   mpc.ReceiveMat(matrix, other_pid, n_rows, n_cols);
   mpc.WriteToFile(matrix, fs);
   fs.close();
@@ -106,11 +106,11 @@ bool mask_data(string data_dir, MPCEnv& mpc, int other_pid) {
     fs.close();
 
     /* Write batch to file. */
-    if (!mask_matrix(data_dir, mpc, "X_P" + other_pid + suffixes[i],
+    if (!mask_matrix(data_dir, mpc, "X" + suffixes[i],
                      Param::N_FILE_BATCH, Param::FEATURE_RANK, other_pid))
       return false;
 
-    if (!mask_matrix(data_dir, mpc, "y_P" + other_pid + suffixes[i],
+    if (!mask_matrix(data_dir, mpc, "y" + suffixes[i],
                      Param::N_FILE_BATCH, Param::N_CLASSES - 1, other_pid))
       return false;
   }

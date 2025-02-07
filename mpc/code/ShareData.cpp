@@ -14,9 +14,9 @@ using namespace NTL;
 using namespace std;
 
 void send_masked_matrix(MPCEnv& mpc, string name, Mat<ZZ_p>& matrix,
-                 size_t n_rows, size_t n_cols, int other_pid) {
+                        int other_pid, string data_dir) {
   Mat<ZZ_p> mask;
-  mpc.RandMat(mask, n_rows, n_cols);
+  mpc.RandMat(mask, matrix.NumRows(), matrix.NumCols());
   matrix -= mask;
   mpc.SendMat(matrix, other_pid);
   tcout() << "Sent masked matrix for " << name << " to " << other_pid << endl;
@@ -74,11 +74,11 @@ bool mask_matrix(string data_dir, MPCEnv& mpc, string name,
    * Order of operations is swapped depending on the party,
    * to avoid a deadlock. */
   if (other_pid == 2) {
-    send_masked_matrix(mpc, name, matrix, n_rows, n_cols, other_pid);
+    send_masked_matrix(mpc, name, matrix, other_pid, data_dir);
     recv_masked_matrix(data_dir, mpc, name, n_rows, n_cols, other_pid);
   } else {
     recv_masked_matrix(data_dir, mpc, name, n_rows, n_cols, other_pid);
-    send_masked_matrix(mpc, name, matrix, n_rows, n_cols, other_pid);
+    send_masked_matrix(mpc, name, matrix, other_pid, data_dir);
   }
 
   return true;

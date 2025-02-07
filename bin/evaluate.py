@@ -88,15 +88,15 @@ def report_scores(X, y, W, b, act, data_dir, test: bool):
         sys.stderr.write('\n')
 
 
-def load_model():
+def load_model(pid: int):
     W = [[] for _ in range(N_HIDDEN + 1)]
     for l in range(N_HIDDEN + 1):
-        W[l] = np.loadtxt('mpc/cache/test_P1_W{}_final.bin'.format(l))
+        W[l] = np.loadtxt(f'mpc/cache/test_P{pid}_W{l}_final.bin')
 
     # Initialize bias vector with zeros.
     b = [[] for _ in range(N_HIDDEN + 1)]
     for l in range(N_HIDDEN + 1):
-        b[l] = np.loadtxt('mpc/cache/test_P1_b{}_final.bin'.format(l))
+        b[l] = np.loadtxt(f'mpc/cache/test_P{pid}_b{l}_final.bin')
 
     # Initialize activations.
     act = [[] for _ in range(N_HIDDEN)]
@@ -106,8 +106,9 @@ def load_model():
 
 if __name__ == '__main__':
     data_dir = sys.argv[1].rstrip('/')
+    pid = int(sys.argv[2])
 
-    W, b, act = load_model()
+    W, b, act = load_model(pid)
 
     for data_type, suffix in (('train', '_final'), ('test', '')):
         X = np.genfromtxt(

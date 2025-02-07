@@ -11,7 +11,7 @@ N_HIDDEN = 1
 LOSS = 'hinge'
 
 
-def report_scores(X, y, W, b, act, data_dir, test: bool):
+def report_scores(X, y, W, b, act, data_dir):
     y_true = []
     y_pred = []
     y_score = []
@@ -64,9 +64,6 @@ def report_scores(X, y, W, b, act, data_dir, test: bool):
         # Plot ROC curve and precision-recall curve in subplots and save to file
         plt.figure(figsize=(12, 5))
 
-        if not test:
-            return
-
         fpr, tpr, _ = metrics.roc_curve(y_true, y_score)
         plt.subplot(1, 2, 1)
         plt.plot(fpr, tpr)
@@ -110,13 +107,8 @@ if __name__ == '__main__':
 
     W, b, act = load_model(pid)
 
-    for data_type, suffix in (('train', '_final'), ('test', '')):
-        X = np.genfromtxt(
-            f'{data_dir}/X{data_type}{suffix}', delimiter=1, dtype='float'
-        )
-        y = np.genfromtxt(
-            f'{data_dir}/y{data_type}{suffix}', delimiter=1, dtype='float'
-        )
+    X = np.genfromtxt(f'{data_dir}/Xtest', delimiter=1, dtype='float')
+    y = np.genfromtxt(f'{data_dir}/ytest', delimiter=1, dtype='float')
 
-        print(f'{data_type.capitalize()} accuracy:')
-        report_scores(X, y, W, b, act, data_dir, data_type == "test")
+    print(f'Testing accuracy:')
+    report_scores(X, y, W, b, act, data_dir)

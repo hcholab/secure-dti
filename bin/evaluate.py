@@ -1,13 +1,11 @@
 import datetime
-import random
 import sys
-from string import ascii_lowercase
+from glob import glob
 
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn import metrics
 
-N_HIDDEN = 1
 LOSS = 'hinge'
 
 
@@ -16,13 +14,13 @@ def report_scores(X, y, W, b, act, data_dir):
     y_pred = []
     y_score = []
 
-    for l in range(N_HIDDEN):
+    for l in range(len(W) - 1):
         if l == 0:
             act[l] = np.maximum(0, np.dot(X, W[l]) + b[l])
         else:
             act[l] = np.maximum(0, np.dot(act[l - 1], W[l]) + b[l])
 
-    if N_HIDDEN == 0:
+    if len(W) == 1:
         scores = np.dot(X, W[-1]) + b[-1]
     else:
         scores = np.dot(act[-1], W[-1]) + b[-1]
@@ -86,17 +84,21 @@ def report_scores(X, y, W, b, act, data_dir):
 
 
 def load_model(pid: int):
-    W = [[] for _ in range(N_HIDDEN + 1)]
-    for l in range(N_HIDDEN + 1):
-        W[l] = np.loadtxt(f'mpc/cache/test_P{pid}_W{l}_final.bin')
+    prefix = f'mpc/cache/test_P{pid}_'
+    suffix = '_final.bin'
+    n_hidden = len(glob(f'{prefix}W*{suffix}')) - 1
+
+    W = [[] for _ in range(n_hidden + 1)]
+    for l in range(n_hidden + 1):
+        W[l] = np.loadtxt(f'{prefix}W{l}{suffix}')
 
     # Initialize bias vector with zeros.
-    b = [[] for _ in range(N_HIDDEN + 1)]
-    for l in range(N_HIDDEN + 1):
-        b[l] = np.loadtxt(f'mpc/cache/test_P{pid}_b{l}_final.bin')
+    b = [[] for _ in range(n_hidden + 1)]
+    for l in range(n_hidden + 1):
+        b[l] = np.loadtxt(f'{prefix}b{l}{suffix}')
 
     # Initialize activations.
-    act = [[] for _ in range(N_HIDDEN)]
+    act = [[] for _ in range(n_hidden)]
 
     return W, b, act
 

@@ -366,7 +366,7 @@ void export_mat(MPCEnv& mpc, Mat<ZZ_p>& A, string fname) {
 }
 
 void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
-              int pid, MPCEnv& mpc) {
+              size_t n_rows, size_t n_Xcols, int pid, MPCEnv& mpc) {
   if (pid == 0)
     /* Matrices must also be initialized even in CP0,
        but they do not need to be filled. */
@@ -386,19 +386,19 @@ void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
   /* Read in blinded matrix from the other party. */
   Mat<ZZ_p> Xm, ym;
   if (!read_matrix(Xm, ifs, Param::FEATURES_FILE + suffix + "_masked.bin",
-                   X.NumRows(), X.NumCols(), mpc))
+                   n_rows, n_Xcols, mpc))
     return;
 
   if (!read_matrix(ym, ifs, Param::LABELS_FILE + suffix + "_masked.bin",
-                   y.NumRows(), y.NumCols(), mpc))
+                   n_rows, y.NumCols(), mpc))
     return;
 
   /* Use seed to regenerate blinding factors.
      These need to be generated in the same order as the
      original blinding factors! */
   mpc.SwitchSeed(20);
-  mpc.RandMat(X, X.NumRows(), X.NumCols());
-  mpc.RandMat(y, y.NumRows(), y.NumCols());
+  mpc.RandMat(X, n_rows, n_Xcols);
+  mpc.RandMat(y, n_rows, y.NumCols());
   mpc.RestoreSeed();
 
   /* Concatenate results */
@@ -487,8 +487,10 @@ bool dti_protocol(MPCEnv& mpc, int pid) {
   Mat<ZZ_p> X, y;
   X.SetDims(Param::N_FILE_BATCH, Param::FEATURE_RANK);
   y.SetDims(Param::N_FILE_BATCH, Param::N_CLASSES - 1);
+  const size_t n_rows = X.NumRows(), n_Xcols = X.NumCols();
+
   string suffix = suffixes[rand() % suffixes.size()];
-  load_X_y(suffix, X, y, pid, mpc);
+  load_X_y(suffix, X, y, n_rows, n_Xcols, pid, mpc);
 
   if (pid > 0) {
     export_mat(mpc, X, Param::FEATURES_FILE + suffix + "_final");
@@ -504,7 +506,7 @@ bool dti_protocol(MPCEnv& mpc, int pid) {
 
     suffix = suffixes[rand() % suffixes.size()];
 
-    load_X_y(suffix, X, y, pid, mpc);
+    load_X_y(suffix, X, y, n_rows, n_Xcols, pid, mpc);
   }
 
   if (pid > 0) {

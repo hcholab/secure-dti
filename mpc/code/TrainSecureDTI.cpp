@@ -389,6 +389,7 @@ void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
   mpc.RestoreSeed();
 
   /* Concatenate results */
+  if (pid == 2) X.swap(Xm);
   concat_mat(mpc, X, Xm);
   concat_mat(mpc, y, ym);
 }

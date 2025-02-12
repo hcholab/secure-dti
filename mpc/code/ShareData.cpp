@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
   string pid_str(argv[1]);
   int pid;
   if (!Param::Convert(pid_str, pid, "party_id") || pid < 0 || pid > 2) {
-    tcout() << "Error: party_id should be 0, 1, or 3" << endl;
+    tcout() << "Error: party_id should be 0, 1, or 2" << endl;
     return 1;
   }
 

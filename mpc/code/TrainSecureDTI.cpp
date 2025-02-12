@@ -353,7 +353,7 @@ void concat_mat(MPCEnv& mpc, Mat<ZZ_p>& A, const Mat<ZZ_p>& B) {
 }
 
 void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
-              size_t n_rows, size_t n_Xcols, int pid, MPCEnv& mpc) {
+              size_t n_rows, int pid, MPCEnv& mpc) {
   if (pid == 0)
     /* Matrices must also be initialized even in CP0,
        but they do not need to be filled. */
@@ -361,7 +361,7 @@ void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
   ifstream ifs;
 
   /* Load seed */
-  string fname = Param::CACHE_FILE_PREFIX + "_seed" + suffix + ".bin";
+  string fname = cache(pid, "seed" + suffix);
   ifs.open(fname.c_str(), ios::binary);
   if (!ifs.is_open()) {
     tcout() << "Error: could not open " << fname << endl;
@@ -373,7 +373,7 @@ void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
   /* Read in blinded matrix from the other party. */
   Mat<ZZ_p> Xm, ym;
   if (!read_matrix(Xm, ifs, Param::FEATURES_FILE + suffix + "_masked.bin",
-                   n_rows, n_Xcols, mpc))
+                   n_rows, X.NumCols(), mpc))
     return;
 
   if (!read_matrix(ym, ifs, Param::LABELS_FILE + suffix + "_masked.bin",
@@ -384,7 +384,7 @@ void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
      These need to be generated in the same order as the
      original blinding factors! */
   mpc.SwitchSeed(20);
-  mpc.RandMat(X, n_rows, n_Xcols);
+  mpc.RandMat(X, n_rows, X.NumCols());
   mpc.RandMat(y, n_rows, y.NumCols());
   mpc.RestoreSeed();
 
@@ -475,10 +475,10 @@ bool dti_protocol(MPCEnv& mpc, int pid) {
   Mat<ZZ_p> X, y;
   X.SetDims(Param::N_FILE_BATCH, Param::FEATURE_RANK);
   y.SetDims(Param::N_FILE_BATCH, Param::N_CLASSES - 1);
-  const size_t n_rows = X.NumRows(), n_Xcols = X.NumCols();
+  const size_t n_rows = X.NumRows();
 
   string suffix = suffixes[rand() % suffixes.size()];
-  load_X_y(suffix, X, y, n_rows, n_Xcols, pid, mpc);
+  load_X_y(suffix, X, y, n_rows, pid, mpc);
 
   /* Do gradient descent over multiple training epochs. */
   for (int epoch = 0; epoch < Param::MAX_EPOCHS;
@@ -489,7 +489,7 @@ bool dti_protocol(MPCEnv& mpc, int pid) {
 
     suffix = suffixes[rand() % suffixes.size()];
 
-    load_X_y(suffix, X, y, n_rows, n_Xcols, pid, mpc);
+    load_X_y(suffix, X, y, n_rows, pid, mpc);
   }
 
   if (pid > 0) {

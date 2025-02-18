@@ -388,8 +388,13 @@ void load_X_y(string suffix, Mat<ZZ_p>& X, Mat<ZZ_p>& y,
   mpc.RandMat(y, n_rows, y.NumCols());
   mpc.RestoreSeed();
 
+  /* Swap matrix order for P2 */
+  if (pid == 2) {
+    X.swap(Xm);
+    y.swap(ym);
+  }
+
   /* Concatenate results */
-  if (pid == 2) X.swap(Xm);
   concat_mat(mpc, X, Xm);
   concat_mat(mpc, y, ym);
 }
